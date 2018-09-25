@@ -1,0 +1,33 @@
+{
+  "name": "drupal-behaviors-loader",
+  "version": "1.0.0",
+  "description": "Integrate Drupal behaviors into your webpack setup, including HMR (hot module replacement)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dulnan/drupal-behaviors-loader.git"
+  },
+  "keywords": [
+    "drupal",
+    "behaviors",
+    "webpack",
+    "attach",
+    "detach",
+    "hmr",
+    "hot",
+    "module"
+  ],
+  "author": "Jan Hug",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dulnan/drupal-behaviors-loader/issues"
+  },
+  "homepage": "https://github.com/dulnan/drupal-behaviors-loader#readme",
+  "dependencies": {
+    "loader-utils": "^1.1.0",
+    "schema-utils": "^1.0.0"
+  }
+}
