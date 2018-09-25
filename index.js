@@ -1,5 +1,5 @@
 /**
- * webpack-behaviors-loader
+ * drupal-behaviors-loader
  *
  * (c) 2018 by Jan Hug
  * Released under the MIT license.
@@ -87,13 +87,13 @@ function buildHmrCode (content, objectPath, name) {
     module.hot.accept()
 
     if (module.hot.status() === 'apply' && typeof ${objectPath}.attach === 'function') {
-      ${objectPath}.attach()
+      ${objectPath}.attach(document, window.drupalSettings)
     }
 
     module.hot.dispose(function () {
       if (typeof ${objectPath}.detach === 'function') {
         console.log('Drupal Behaviors - detaching: ${name}')
-        ${objectPath}.detach()
+        ${objectPath}.detach(document, window.drupalSettings, 'unload')
       }
     })
   }`
