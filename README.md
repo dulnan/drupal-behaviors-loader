@@ -1,19 +1,23 @@
 # drupal-behaviors-loader
-#### Hot module replacement
+*HOT* module replacement for your Drupal behaviors.
 
 # How it works
 Every behavior has to be in its own file. The naming scheme is [name].behavior.js.
 The loader will use the [name] and attach it to the global Drupal.behaviors object.
 
-Your behavior file should export an object. Ideally it has an `attach` function and also
+Your behavior file should export an object. Ideally it provides an `attach` and also
 a `detach` function.
 
-The loader will generate and inject code that enabled 'hot module replacement'. When a
-replacement is going to happen, it will first call the `detach` function, replace it
-and then call `attach` again.
+The loader will generate and inject code that makes 'hot module replacement' possible.
+When a module replacement is going to happen, it will first call the `detach` function,
+where it's the job of the beahvior to remove any event listeners or 'clean up'.
+Then webpack will replace the behavior with the new one. The injected code then calls
+`attach` again. No page refresh required and only the behavior actually changed will be
+reattached.
 
-If you add event listeners in your behavior, you should remove them again in the `detach`
-function. Otherwise it might lead to some unexpected behavior.
+It's really important to remove event listeners and destroy instantiated classes that
+might have altered the document in any way. Otherwise it might lead to some unexpected
+behavior.
 
 # How to use
 ## Add the loader to your webpack config
@@ -125,3 +129,96 @@ App running at:
 ```
 
 How fantastic!
+
+# Full theme and webpack config example
+Let's see how a fully functioning webpack config for the average Drupal theme
+might look like. This also includes compilation of SCSS files and importing
+them in your entry files or even behaviors.
+
+*webpack.config.js*
+```javascript
+const path = require('path')
+
+// If you want to integrate (S)CSS into your webpack build,
+// this plugin will extract css files in separate files.
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
+module.exports = env => {
+  const isProduction = env.production
+
+  let output = {
+    publicPath: 'http://localhost:9000'
+  }
+
+  // Define two entries: One for global styling and behaviors,
+  // the other for an imaginary gallery component.
+  let entry = {
+    global: './src/main.js',
+    gallery: './src/gallery.js'
+  }
+  
+  let module = {
+    rules: [
+      {
+        // Only load files that match *.behavior.js
+        test: /\.behavior.js$/,
+
+        // Define the loader to use.
+        loader: 'drupal-behaviors-loader'
+
+        // Exclude node_modules folder.
+        exclude: /node_modules/,
+
+        // Optionally define a folder to include specifically.
+        // include: /js\/behaviors/,
+
+        // Set the options. Depending on the env, enable
+        // or disable injection of the HMR code.
+        options: {
+          enableHmr: !isProduction
+        },
+      },
+
+      // This will transpile our JS files using Babel.
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader'
+        }
+      },
+
+      // If you want to also compile SCSS files, add this loader.
+      {
+        test: /\.scss$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          'sass-loader'
+        ]
+      }
+    ]
+  }
+
+  let plugins = []
+
+  // Only extract CSS when building assets for production.
+  if (isProduction) {
+    plugins.push(new MiniCssExtractPlugin({
+      // For more information and options, check out
+      // https://github.com/webpack-contrib/sass-loader#in-production
+      filename: '[name].css',
+      chunkFilename: '[id].css'
+    }))
+  }
+
+  // Setting up webpack devServer
+  let devServer = {
+    contentBase: path.join(__dirname, 'dist'),
+    compress: true,
+    port: 9000
+  }
+
+  return { entry, module, plugins, devServer }
+}
+```
